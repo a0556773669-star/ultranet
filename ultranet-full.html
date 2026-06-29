@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>אולטרה-נט | מערכת ניהול</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap');
+:root{
+  --teal:#1a8a76;--teal-l:#22b09a;--teal-d:#0f5a4d;
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f4f6f9;
+  --border:#dde3ec;--text:#1a2332;--text2:#5a6a7e;--text3:#99a8bb;
+  --green:#27ae60;--yellow:#e67e22;--danger:#e74c3c;--purple:#8e44ad;--blue:#2980b9;
+  --shadow:0 2px 8px rgba(0,0,0,0.07);--shadow-md:0 4px 20px rgba(0,0,0,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+#loadingScreen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:20px}
+.spinner{width:32px;height:32px;border:3px solid #e8edf2;border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loginScreen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#e0f0ed,#f0f2f5,#fef9f0)}
+.login-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:400px;text-align:center;box-shadow:var(--shadow-md)}
+.login-box h1{font-size:22px;font-weight:800;margin-bottom:4px;color:var(--teal)}
+.login-box p{color:var(--text2);font-size:13px;margin-bottom:28px}
+.form-group{margin-bottom:14px;text-align:right}
+.form-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.form-group input{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Heebo',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s}
+.form-group input:focus{border-color:var(--teal);background:#fff}
+.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--teal),var(--teal-l));border:none;border-radius:10px;color:#fff;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(26,138,118,0.3);transition:opacity 0.2s}
+.btn-primary:hover{opacity:.9}
+.login-error{color:var(--danger);font-size:13px;margin-top:10px;display:none;background:#fdf2f2;padding:8px 12px;border-radius:8px}
+#app{display:none;min-height:100vh}
+.topbar{background:#fff;border-bottom:1.5px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+.topbar-logo{font-size:18px;font-weight:900;color:var(--teal);letter-spacing:-0.5px}
+.topbar-nav{display:flex;gap:2px;flex-wrap:wrap}
+.nav-btn{padding:6px 10px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-family:'Heebo',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:#e0f0ed;color:var(--teal);font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.user-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px 4px 6px;font-size:12px;font-weight:500}
+.ua{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-l));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.btn-logout{background:none;border:1.5px solid var(--border);border-radius:8px;color:var(--text2);padding:5px 10px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:12px}
+.btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+.content{padding:20px;max-width:1200px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+.page-header{margin-bottom:18px}
+.page-header h2{font-size:21px;font-weight:800}
+.page-header p{color:var(--text2);font-size:13px;margin-top:3px}
+.card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+/* TABS */
+.branch-tabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
+.branch-tab{padding:6px 13px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;font-weight:500;transition:all .15s}
+.branch-tab:hover{border-color:var(--teal);color:var(--teal)}
+.branch-tab.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+/* STATS */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.stat-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.stat-label{font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase}
+.stat-val{font-size:26px;font-weight:900}
+.stat-val.green{color:var(--green)}.stat-val.yellow{color:var(--yellow)}.stat-val.red{color:var(--danger)}.stat-val.teal{color:var(--teal)}.stat-val.purple{color:var(--purple)}
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:right;padding:9px 11px;font-size:11px;color:var(--text2);font-weight:700;border-bottom:2px solid var(--border);background:var(--surface2);text-transform:uppercase}
+.data-table td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#f8fafc}
+/* BADGES */
+.badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.badge.green{background:#eaf7ef;color:var(--green)}
+.badge.yellow{background:#fef5e7;color:var(--yellow)}
+.badge.red{background:#fdf2f2;color:var(--danger)}
+.badge.blue{background:#e8f4fd;color:var(--blue)}
+.badge.purple{background:#f3e8fd;color:var(--purple)}
+/* FORMS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.field-label{font-size:12px;color:var(--text2);font-weight:600}
+.field-input,.field-select,.field-textarea{width:100%;padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Heebo',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--teal);background:#fff}
+.field-textarea{resize:vertical;min-height:70px}
+/* BUTTONS */
+.btn-teal{padding:8px 18px;background:linear-gradient(135deg,var(--teal),var(--teal-l));border:none;border-radius:9px;color:#fff;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(26,138,118,.25);transition:opacity .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-teal:hover{opacity:.9}
+.btn-outline{padding:6px 13px;background:#fff;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Heebo',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;font-weight:500}
+.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
+.btn-danger{padding:4px 9px;background:#fff;border:1.5px solid #f5c6c6;border-radius:7px;color:var(--danger);font-family:'Heebo',sans-serif;font-size:11px;cursor:pointer;font-weight:600}
+.btn-sm{padding:5px 11px;border-radius:7px;border:1.5px solid var(--border);background:#fff;color:var(--text2);font-family:'Heebo',sans-serif;font-size:11px;font-weight:600;cursor:pointer}
+.btn-sm:hover{border-color:var(--teal);color:var(--teal)}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border:1px solid var(--border);border-radius:16px;padding:26px;width:520px;max-width:94vw;box-shadow:var(--shadow-md);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:16px}
+.modal-btns{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+.btn-cancel{padding:8px 16px;border-radius:9px;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px}
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);border-radius:12px;padding:11px 22px;font-size:13px;font-weight:700;color:#fff;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:var(--shadow-md)}
+.toast.ok{background:var(--teal)}.toast.error{background:var(--danger)}.toast.show{opacity:1}
+/* RENTAL CARD */
+.rental-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow)}
+.rental-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.rental-client{font-size:15px;font-weight:700;flex:1}
+.rental-meta{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--text2)}
+.rental-footer{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
+/* ACC */
+.acc-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.acc-row:last-child{border-bottom:none}
+.acc-label{flex:1;font-weight:500}
+.acc-amount{font-weight:700;min-width:80px;text-align:left}
+.acc-amount.income{color:var(--green)}
+.acc-amount.expense{color:var(--danger)}
+/* DOC */
+.doc-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid var(--border);border-radius:10px;margin-bottom:7px}
+.doc-icon{font-size:22px;flex-shrink:0}
+.doc-info{flex:1}
+.doc-name{font-size:14px;font-weight:600}
+.doc-sub{font-size:11px;color:var(--text2);margin-top:2px}
+/* GUIDE */
+.guide-item{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:15px 18px;margin-bottom:9px}
+.guide-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.guide-text{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap}
+.video-embed{width:100%;border-radius:10px;margin-top:10px;aspect-ratio:16/9;border:none}
+/* PERM CHIPS */
+.perm-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:15px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);cursor:pointer;user-select:none;transition:all .15s}
+.perm-chip.on{background:#e0f0ed;border-color:var(--teal);color:var(--teal)}
+.empty-state{text-align:center;padding:36px;color:var(--text3);font-size:13px}
+.empty-state .icon{font-size:28px;margin-bottom:7px}
+.section-divider{height:1px;background:var(--border);margin:16px 0}
+/* SUMMARY BOX */
+.summary-box{background:linear-gradient(135deg,#e0f0ed,#f0faf8);border:1.5px solid var(--teal);border-radius:12px;padding:16px 20px;margin-top:12px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+.summary-row.total{font-size:16px;font-weight:800;border-top:1.5px solid var(--teal);margin-top:8px;padding-top:10px;color:var(--teal)}
+/* LAPTOP CARD */
+.laptop-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;margin-bottom:5px}
+.laptop-name{flex:1;font-weight:600;font-size:13px}
+.laptop-price{font-size:12px;color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div style="font-size:28px;font-weight:900;color:var(--teal)">🖥️ אולטרה-נט</div>
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--text2)">טוען מערכת...</div>
+</div>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <div style="font-size:36px;margin-bottom:12px">🖥️</div>
+    <h1>אולטרה-נט</h1>
+    <p>מערכת ניהול חדרי מחשבים והשכרת ניידים</p>
+    <div class="form-group"><label>מייל</label><input type="email" id="loginEmail" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label>סיסמה</label><input type="password" id="loginPass" placeholder="סיסמה" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-primary" onclick="doLogin()">כניסה למערכת</button>
+    <div class="login-error" id="loginError">מייל או סיסמה שגויים</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">🖥️ אולטרה-נט</div>
+    <div class="topbar-nav" id="topNav"></div>
+    <div class="topbar-right">
+      <div class="user-chip"><div class="ua" id="userAvatar">מ</div><span id="userLabel">--</span><span id="branchLabel" style="font-size:11px;color:var(--text2);background:var(--border);padding:1px 7px;border-radius:10px;margin-right:4px"></span></div>
+      <button class="btn-logout" onclick="doLogout()">יציאה</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- DASHBOARD -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header"><h2 id="dashGreeting">שלום 👋</h2><p id="dashDate"></p></div>
+      <div class="dash-grid" id="dashStats"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="card"><div class="card-title">📋 השכרות פעילות</div><div id="dashRentals"></div></div>
+        <div class="card"><div class="card-title">⚠️ תשלומים ממתינים</div><div id="dashPending"></div></div>
+      </div>
+    </div>
+
+    <!-- COMPUTER ROOM (existing system) -->
+    <div class="page" id="page-computers">
+      <div class="page-header"><h2>🖥️ ניהול חדר מחשבים</h2><p>מערכת התפעול הקיימת</p></div>
+      <div class="card">
+        <div class="card-title">ממשק חדר מחשבים</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px">המערכת הקיימת ממשיכה לרוץ — העובדים רואים אותה כרגיל, אתה רואה את כל הנתונים.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px" id="computerStats"></div>
+        <div class="branch-tabs" id="computerBranchTabs"></div>
+        <div id="computerContent"></div>
+      </div>
+    </div>
+
+    <!-- RENTALS -->
+    <div class="page" id="page-rentals">
+      <div class="page-header"><h2>💻 השכרת ניידים</h2><p id="rentalsSubtitle">ניהול השכרות</p></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <div class="branch-tabs" id="rentalBranchTabs" style="margin-bottom:0;flex:1"></div>
+        <button class="btn-teal" onclick="openNewRental()">+ השכרה חדשה</button>
+      </div>
+      <div class="dash-grid" id="rentalStats"></div>
+      <div class="branch-tabs">
+        <button class="branch-tab active" onclick="filterRentals('active',this)">פעילות</button>
+        <button class="branch-tab" onclick="filterRentals('all',this)">הכל</button>
+        <button class="branch-tab" onclick="filterRentals('returned',this)">הוחזרו</button>
+      </div>
+      <div id="rentalsList"></div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div class="page-header"><h2>👥 לקוחות</h2><p>כרטיסי לקוח עם פרטי אשראי</p></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+        <div class="branch-tabs" id="clientBranchTabs" style="margin-bottom:0;flex:1"></div>
+        <button class="btn-teal" onclick="openNewClient()">+ לקוח חדש</button>
+      </div>
+      <div id="clientsList"></div>
+    </div>
+
+    <!-- ACCOUNTING -->
+    <div class="page" id="page-accounting">
+      <div class="page-header"><h2>📊 הנהלת חשבונות</h2><p>הכנסות, הוצאות וחלוקת רווחים</p></div>
+      <div class="branch-tabs" id="accBranchTabs"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="field-select" id="accMonth" style="width:auto" onchange="loadAccounting()"></select>
+        <button class="btn-teal" onclick="openAddExpense()">+ הוצאה</button>
+        <button class="btn-teal" onclick="openAddIncome()">+ הכנסה</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="card">
+          <div class="card-title">📥 הכנסות</div>
+          <div id="incomeList"></div>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:700;font-size:14px;color:var(--green)">
+            <span>סה"כ הכנסות:</span><span id="totalIncome">₪0</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📤 הוצאות</div>
+          <div id="expenseList"></div>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;font-weight:700;font-size:14px;color:var(--danger)">
+            <span>סה"כ הוצאות:</span><span id="totalExpense">₪0</span>
+          </div>
+        </div>
+      </div>
+      <div class="summary-box" id="profitSummary"></div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div class="page" id="page-docs">
+      <div class="page-header"><h2>📁 מסמכים</h2><p>קבצים להורדה והדפסה</p></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center" id="docsAdminBar"></div>
+      <div class="branch-tabs" id="docCategoryTabs"></div>
+      <div id="docsList"></div>
+    </div>
+
+    <!-- GUIDES -->
+    <div class="page" id="page-guides">
+      <div class="page-header"><h2>📖 הדרכות</h2><p>מדריכים כתובים וסרטונים</p></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center" id="guidesAdminBar"></div>
+      <div class="branch-tabs" id="guideCategoryTabs"></div>
+      <div id="guidesList"></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="page" id="page-admin">
+      <div class="page-header"><h2>⚙️ הגדרות מערכת</h2><p>ניהול משתמשים, ניידים ומחירים</p></div>
+      <div class="card">
+        <div class="card-title">👥 משתמשים והרשאות</div>
+        <div id="adminUsersList"></div>
+        <div style="margin-top:12px"><button class="btn-teal" onclick="openAddUser()">+ הוסף משתמש</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💻 ניידים וספר מחירים</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">הגדר ניידים ומחירים ליום/שבוע/חודש</p>
+        <div id="laptopsList"></div>
+        <div style="margin-top:12px"><button class="btn-teal" onclick="openAddLaptop()">+ הוסף נייד</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏢 סניפים</div>
+        <div id="branchesList"></div>
+        <div style="margin-top:12px"><button class="btn-teal" onclick="openAddBranch()">+ הוסף סניף</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- New Rental Modal -->
+<div class="modal-overlay" id="rentalModal">
+<div class="modal">
+  <h3 id="rentalModalTitle">💻 השכרה חדשה</h3>
+  <input type="hidden" id="rentalEditId">
+  <div style="display:grid;gap:10px">
+    <div class="form-field"><div class="field-label">לקוח</div>
+      <select class="field-select" id="rentalClient"></select>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">נייד</div>
+        <select class="field-select" id="rentalLaptop" onchange="updateRentalCalc()"></select>
+      </div>
+      <div class="form-field"><div class="field-label">מחיר מיוחד ליום (ריק = ברירת מחדל)</div>
+        <input class="field-input" type="number" id="rentalCustomPrice" placeholder="אוטומטי" oninput="updateRentalCalc()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">תאריך תחילה</div>
+        <input class="field-input" type="date" id="rentalStart" oninput="updateRentalCalc()">
+      </div>
+      <div class="form-field"><div class="field-label">תאריך סיום צפוי</div>
+        <input class="field-input" type="date" id="rentalEnd" oninput="updateRentalCalc()">
+      </div>
+    </div>
+    <div class="form-field"><div class="field-label">סניף</div>
+      <select class="field-select" id="rentalBranch"></select>
+    </div>
+    <div class="form-field"><div class="field-label">הערות</div>
+      <textarea class="field-textarea" id="rentalNotes" placeholder="הערות..."></textarea>
+    </div>
+    <div id="rentalCalcBox" style="display:none;background:var(--surface2);border-radius:10px;padding:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">חישוב מחיר</div>
+      <div id="rentalCalcDetails"></div>
+    </div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('rentalModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveRental()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- Client Modal -->
+<div class="modal-overlay" id="clientModal">
+<div class="modal">
+  <h3 id="clientModalTitle">👤 לקוח חדש</h3>
+  <input type="hidden" id="clientEditId">
+  <div style="display:grid;gap:10px">
+    <div class="form-field"><div class="field-label">שם מלא</div><input class="field-input" id="clientName" placeholder="שם מלא"></div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">טלפון</div><input class="field-input" id="clientPhone" placeholder="050-0000000"></div>
+      <div class="form-field"><div class="field-label">כתובת</div><input class="field-input" id="clientAddress" placeholder="כתובת מגורים"></div>
+    </div>
+    <div class="form-field"><div class="field-label">🔒 מספר אשראי (לפיקדון)</div><input class="field-input" id="clientCC" placeholder="XXXX-XXXX-XXXX-XXXX"></div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">תוקף</div><input class="field-input" id="clientExp" placeholder="MM/YY"></div>
+      <div class="form-field"><div class="field-label">CVV</div><input class="field-input" id="clientCVV" placeholder="CVV" maxlength="4"></div>
+    </div>
+    <div class="form-field"><div class="field-label">מספר ת"ז</div><input class="field-input" id="clientID" placeholder="מספר ת.ז"></div>
+    <div class="form-field"><div class="field-label">סניף</div><select class="field-select" id="clientBranch"></select></div>
+    <div class="form-field"><div class="field-label">הערות</div><textarea class="field-textarea" id="clientNotes" placeholder="הערות..."></textarea></div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('clientModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveClient()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- Income Modal -->
+<div class="modal-overlay" id="incomeModal">
+<div class="modal">
+  <h3>📥 הוספת הכנסה</h3>
+  <div style="display:grid;gap:10px">
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">סכום (₪)</div><input class="field-input" type="number" id="incomeAmount" placeholder="0"></div>
+      <div class="form-field"><div class="field-label">תאריך</div><input class="field-input" type="date" id="incomeDate"></div>
+    </div>
+    <div class="form-field"><div class="field-label">תיאור</div><input class="field-input" id="incomeDesc" placeholder="תיאור ההכנסה"></div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">קטגוריה</div>
+        <select class="field-select" id="incomeCategory">
+          <option>השכרת ניידים</option><option>חדר מחשבים</option><option>אחר</option>
+        </select>
+      </div>
+      <div class="form-field"><div class="field-label">מי גבה</div>
+        <select class="field-select" id="incomeCollector"></select>
+      </div>
+    </div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('incomeModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveIncome()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal-overlay" id="expenseModal">
+<div class="modal">
+  <h3>📤 הוספת הוצאה</h3>
+  <div style="display:grid;gap:10px">
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">סכום (₪)</div><input class="field-input" type="number" id="expenseAmount" placeholder="0"></div>
+      <div class="form-field"><div class="field-label">תאריך</div><input class="field-input" type="date" id="expenseDate"></div>
+    </div>
+    <div class="form-field"><div class="field-label">תיאור</div><input class="field-input" id="expenseDesc" placeholder="תיאור ההוצאה"></div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">סוג</div>
+        <select class="field-select" id="expenseType">
+          <option value="fixed">קבועה</option><option value="variable">משתנה</option>
+        </select>
+      </div>
+      <div class="form-field"><div class="field-label">מי שילם</div>
+        <select class="field-select" id="expensePayer"></select>
+      </div>
+    </div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('expenseModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveExpense()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- Document Modal -->
+<div class="modal-overlay" id="docModal">
+<div class="modal">
+  <h3>📄 הוספת מסמך</h3>
+  <div style="display:grid;gap:10px">
+    <div class="form-field"><div class="field-label">שם המסמך</div><input class="field-input" id="docName" placeholder="שם המסמך"></div>
+    <div class="form-field"><div class="field-label">תיאור</div><input class="field-input" id="docDesc" placeholder="תיאור קצר"></div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">קטגוריה</div>
+        <select class="field-select" id="docCategory">
+          <option>חוזים</option><option>טפסים</option><option>נהלים</option><option>כללי</option>
+        </select>
+      </div>
+      <div class="form-field"><div class="field-label">סוג קובץ</div>
+        <select class="field-select" id="docType">
+          <option value="pdf">PDF</option><option value="word">Word</option><option value="excel">Excel</option><option value="other">אחר</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field"><div class="field-label">קישור לקובץ (Google Drive / Dropbox)</div>
+      <input class="field-input" id="docUrl" placeholder="https://..."></div>
+    <div class="form-field"><div class="field-label">גישה</div>
+      <select class="field-select" id="docAccess">
+        <option value="all">כולם</option><option value="admin">מנהל בלבד</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('docModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveDoc()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- Guide Modal -->
+<div class="modal-overlay" id="guideModal">
+<div class="modal">
+  <h3>📖 הוספת הדרכה</h3>
+  <div style="display:grid;gap:10px">
+    <div class="form-field"><div class="field-label">כותרת</div><input class="field-input" id="guideName" placeholder="כותרת ההדרכה"></div>
+    <div class="form-field"><div class="field-label">קטגוריה</div>
+      <select class="field-select" id="guideCategory">
+        <option>תפעול</option><option>לקוחות</option><option>תקלות</option><option>כספים</option><option>כללי</option>
+      </select>
+    </div>
+    <div class="form-field"><div class="field-label">תוכן כתוב</div>
+      <textarea class="field-textarea" id="guideText" placeholder="תוכן ההדרכה..." style="min-height:120px"></textarea>
+    </div>
+    <div class="form-field"><div class="field-label">קישור וידאו (YouTube embed URL, אופציונלי)</div>
+      <input class="field-input" id="guideVideo" placeholder="https://www.youtube.com/embed/..."></div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('guideModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveGuide()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- Laptop Modal -->
+<div class="modal-overlay" id="laptopModal">
+<div class="modal">
+  <h3 id="laptopModalTitle">💻 נייד חדש</h3>
+  <input type="hidden" id="laptopEditId">
+  <div style="display:grid;gap:10px">
+    <div class="form-field"><div class="field-label">שם/דגם</div><input class="field-input" id="laptopName" placeholder="לדוגמה: Dell Inspiron 15"></div>
+    <div class="form-row-3">
+      <div class="form-field"><div class="field-label">מחיר ליום (₪)</div><input class="field-input" type="number" id="laptopDay" placeholder="30"></div>
+      <div class="form-field"><div class="field-label">מחיר לשבוע (₪)</div><input class="field-input" type="number" id="laptopWeek" placeholder="180"></div>
+      <div class="form-field"><div class="field-label">מחיר לחודש (₪)</div><input class="field-input" type="number" id="laptopMonth" placeholder="500"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">מס' סידורי</div><input class="field-input" id="laptopSerial" placeholder="SN-001"></div>
+      <div class="form-field"><div class="field-label">סניף</div><select class="field-select" id="laptopBranch"></select></div>
+    </div>
+    <div class="form-field"><div class="field-label">הערות</div><input class="field-input" id="laptopNotes" placeholder="הערות..."></div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('laptopModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveLaptop()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- Branch Modal -->
+<div class="modal-overlay" id="branchModal">
+<div class="modal">
+  <h3 id="branchModalTitle">🏢 סניף חדש</h3>
+  <input type="hidden" id="branchEditId">
+  <div style="display:grid;gap:10px">
+    <div class="form-field"><div class="field-label">שם הסניף</div><input class="field-input" id="branchName" placeholder="שם הסניף"></div>
+    <div class="form-field"><div class="field-label">כתובת</div><input class="field-input" id="branchAddress" placeholder="כתובת"></div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">שם שותף</div><input class="field-input" id="branchPartner" placeholder="שם השותף (אם יש)"></div>
+      <div class="form-field"><div class="field-label">% רווח לשותף</div><input class="field-input" type="number" id="branchPartnerPct" placeholder="50" min="0" max="100"></div>
+    </div>
+    <div class="form-field"><div class="field-label">הערות</div><input class="field-input" id="branchNotes" placeholder="הערות..."></div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('branchModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveBranch()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="userModal">
+<div class="modal">
+  <h3 id="userModalTitle">👤 משתמש חדש</h3>
+  <input type="hidden" id="userEditId">
+  <div style="display:grid;gap:10px">
+    <div class="form-field"><div class="field-label">שם מלא</div><input class="field-input" id="userName" placeholder="שם מלא"></div>
+    <div class="form-row">
+      <div class="form-field"><div class="field-label">מייל</div><input class="field-input" id="userEmail" placeholder="מייל"></div>
+      <div class="form-field"><div class="field-label">סיסמה</div><input class="field-input" type="password" id="userPass" placeholder="סיסמה"></div>
+    </div>
+    <div class="form-field"><div class="field-label">תפקיד</div>
+      <select class="field-select" id="userRole">
+        <option value="owner">בעלים (אני)</option>
+        <option value="partner">שותף</option>
+        <option value="employee">עובד</option>
+      </select>
+    </div>
+    <div class="form-field"><div class="field-label">סניף ראשי</div><select class="field-select" id="userBranch"></select></div>
+    <div class="form-field">
+      <div class="field-label">הרשאות גישה</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px" id="userPermissions">
+        <span class="perm-chip on" data-perm="rentals" onclick="togglePerm(this)">💻 השכרות</span>
+        <span class="perm-chip on" data-perm="clients" onclick="togglePerm(this)">👥 לקוחות</span>
+        <span class="perm-chip" data-perm="accounting" onclick="togglePerm(this)">📊 הנה"ח</span>
+        <span class="perm-chip" data-perm="docs" onclick="togglePerm(this)">📁 מסמכים</span>
+        <span class="perm-chip on" data-perm="guides" onclick="togglePerm(this)">📖 הדרכות</span>
+        <span class="perm-chip" data-perm="computers" onclick="togglePerm(this)">🖥️ מחשבים</span>
+        <span class="perm-chip" data-perm="admin" onclick="togglePerm(this)">⚙️ הגדרות</span>
+      </div>
+    </div>
+  </div>
+  <div class="modal-btns">
+    <button class="btn-cancel" onclick="closeModal('userModal')">ביטול</button>
+    <button class="btn-teal" onclick="saveUser()">💾 שמור</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,where,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+// ============================================================
+// FIREBASE CONFIG — replace with your own if needed
+// ============================================================
+const fbApp=initializeApp({
+  apiKey:"AIzaSyBtxnXhEodeVVOcHPvEdTuvFrW51OrmN5w",
+  authDomain:"ultranet-e94aa.firebaseapp.com",
+  projectId:"ultranet-e94aa",
+  storageBucket:"ultranet-e94aa.firebasestorage.app",
+  messagingSenderId:"813468651616",
+  appId:"1:813468651616:web:845b3c45a267ca10973305"
+});
+const db=getFirestore(fbApp);
+
+// ============================================================
+// STATE
+// ============================================================
+let CU=null; // current user
+let STATE={
+  branches:[],
+  laptops:[],
+  clients:[],
+  rentals:[],
+  rentalBranch:"all",
+  clientBranch:"all",
+  accBranch:"",
+  accMonth:"",
+  rentalFilter:"active",
+  docCategory:"הכל",
+  guideCategory:"הכל"
+};
+
+// ============================================================
+// INIT
+// ============================================================
+async function initDB(){
+  try{
+    // Seed default branches if none
+    const bSnap=await getDocs(collection(db,"n_branches"));
+    if(bSnap.empty){
+      await addDoc(collection(db,"n_branches"),{name:"סניף ראשי (שלי)",address:"",partner:"",partnerPct:0,notes:"",isOwner:true});
+    }
+    // Seed default users if none
+    const uSnap=await getDocs(collection(db,"n_users"));
+    if(uSnap.empty){
+      const bSnap2=await getDocs(collection(db,"n_branches"));
+      const firstBranch=bSnap2.docs[0]?.id||"";
+      await addDoc(collection(db,"n_users"),{
+        name:"מנהל ראשי",email:"admin@ultranet.co.il",pass:"admin123",
+        role:"owner",branchId:"all",
+        perms:{rentals:true,clients:true,accounting:true,docs:true,guides:true,computers:true,admin:true}
+      });
+    }
+  }catch(e){console.error("initDB:",e);}
+  document.getElementById("loadingScreen").style.display="none";
+  document.getElementById("loginScreen").style.display="flex";
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+window.doLogin=async function(){
+  const email=document.getElementById("loginEmail").value.trim().toLowerCase();
+  const pass=document.getElementById("loginPass").value;
+  const snap=await getDocs(collection(db,"n_users"));
+  let found=null;
+  snap.forEach(d=>{const u=d.data();if(u.email?.toLowerCase()===email&&u.pass===pass)found={...u,id:d.id};});
+  if(!found){document.getElementById("loginError").style.display="block";setTimeout(()=>document.getElementById("loginError").style.display="none",3000);return;}
+  CU=found;
+  document.getElementById("loginScreen").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("userAvatar").textContent=(CU.name||"מ")[0];
+  document.getElementById("userLabel").textContent=CU.name;
+  const now=new Date();
+  const days=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+  document.getElementById("dashGreeting").textContent=`שלום, ${CU.name.split(" ")[0]}! 👋`;
+  document.getElementById("dashDate").textContent=`יום ${days[now.getDay()]}, ${now.toLocaleDateString("he-IL")}`;
+  await loadGlobalData();
+  buildNav();
+  showPage("dashboard",null);
+}
+
+window.doLogout=function(){
+  CU=null;STATE={...STATE,branches:[],laptops:[],clients:[],rentals:[]};
+  document.getElementById("app").style.display="none";
+  document.getElementById("loginScreen").style.display="flex";
+  document.getElementById("loginPass").value="";
+}
+
+// ============================================================
+// GLOBAL DATA LOAD
+// ============================================================
+async function loadGlobalData(){
+  // Branches
+  const bSnap=await getDocs(collection(db,"n_branches"));
+  STATE.branches=bSnap.docs.map(d=>({...d.data(),id:d.id}));
+  // Update branch label
+  if(CU.branchId&&CU.branchId!=="all"){
+    const b=STATE.branches.find(b=>b.id===CU.branchId);
+    document.getElementById("branchLabel").textContent=b?b.name:"";
+  } else {
+    document.getElementById("branchLabel").textContent="כל הסניפים";
+  }
+  // Laptops
+  const lSnap=await getDocs(collection(db,"n_laptops"));
+  STATE.laptops=lSnap.docs.map(d=>({...d.data(),id:d.id}));
+  // Clients
+  const cSnap=await getDocs(collection(db,"n_clients"));
+  STATE.clients=cSnap.docs.map(d=>({...d.data(),id:d.id}));
+  // Rentals
+  const rSnap=await getDocs(query(collection(db,"n_rentals"),orderBy("startDate","desc")));
+  STATE.rentals=rSnap.docs.map(d=>({...d.data(),id:d.id}));
+  // Acc month default
+  const mn=new Date();
+  STATE.accMonth=`${mn.getFullYear()}-${String(mn.getMonth()+1).padStart(2,"0")}`;
+  // Default acc branch
+  STATE.accBranch=STATE.branches[0]?.id||"";
+}
+
+// ============================================================
+// NAV
+// ============================================================
+const ALL_PAGES=[
+  {id:"dashboard",label:"🏠 בית",perm:null},
+  {id:"computers",label:"🖥️ מחשבים",perm:"computers"},
+  {id:"rentals",label:"💻 השכרות",perm:"rentals"},
+  {id:"clients",label:"👥 לקוחות",perm:"clients"},
+  {id:"accounting",label:"📊 הנה\"ח",perm:"accounting"},
+  {id:"docs",label:"📁 מסמכים",perm:"docs"},
+  {id:"guides",label:"📖 הדרכות",perm:"guides"},
+  {id:"admin",label:"⚙️ הגדרות",perm:"admin"},
+];
+
+function buildNav(){
+  const nav=document.getElementById("topNav");
+  nav.innerHTML=ALL_PAGES.filter(p=>!p.perm||(CU.perms||{})[p.perm]||(CU.role==="owner"&&p.perm!=="none")).map(p=>`<button class="nav-btn" id="nav-${p.id}" onclick="showPage('${p.id}',this)">${p.label}</button>`).join("");
+}
+
+window.showPage=function(name,btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  const page=document.getElementById("page-"+name);
+  if(!page)return;
+  page.classList.add("active");
+  const navBtn=btn||document.getElementById("nav-"+name);
+  if(navBtn)navBtn.classList.add("active");
+  // Lazy load
+  if(name==="dashboard")loadDashboard();
+  if(name==="computers")loadComputerPage();
+  if(name==="rentals")loadRentalsPage();
+  if(name==="clients")loadClientsPage();
+  if(name==="accounting")loadAccountingPage();
+  if(name==="docs")loadDocsPage();
+  if(name==="guides")loadGuidesPage();
+  if(name==="admin")loadAdminPage();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function myBranches(){
+  if(CU.role==="owner")return STATE.branches;
+  return STATE.branches.filter(b=>b.id===CU.branchId);
+}
+function canSeeBranch(bid){
+  if(CU.role==="owner")return true;
+  return CU.branchId===bid||CU.branchId==="all";
+}
+function formatMoney(n){return"₪"+(Number(n)||0).toLocaleString("he-IL");}
+function fmtDate(d){if(!d)return"";try{return new Date(d).toLocaleDateString("he-IL");}catch{return d;}}
+
+// ============================================================
+// RENTAL CALC (מחשב ימים, שבועות, חודשים - כמו הסקריפט)
+// ============================================================
+function calcRentalDays(start,end){
+  if(!start||!end)return 0;
+  const s=new Date(start),e=new Date(end);
+  const totalDays=Math.round((e-s)/(1000*60*60*24));
+  if(totalDays<=0)return 0;
+  const fullWeeks=Math.floor(totalDays/7);
+  const remainder=totalDays%7;
+  let weekdayRemainder=0;
+  const cur=new Date(e);cur.setDate(cur.getDate()-remainder);
+  for(let i=0;i<remainder;i++){if(cur.getDay()!==6)weekdayRemainder++;cur.setDate(cur.getDate()+1);}
+  return(fullWeeks*7)+weekdayRemainder;
+}
+
+function calcRentalPrice(days,dayPrice,weekPrice,monthPrice){
+  if(!days||!dayPrice)return{total:0,breakdown:""};
+  const fullWeeks=Math.floor(days/7);const remainder=days%7;
+  let price=(fullWeeks*weekPrice)+(remainder*dayPrice);
+  let breakdown=`${fullWeeks} שבועות × ₪${weekPrice} + ${remainder} ימים × ₪${dayPrice}`;
+  const fullMonths=Math.floor(days/30);
+  if(fullMonths>0){
+    const remM=days%30;const weeksM=Math.floor(remM/7);const daysM=remM%7;
+    const priceM=(fullMonths*monthPrice)+(weeksM*weekPrice)+(daysM*dayPrice);
+    if(priceM<price){price=priceM;breakdown=`${fullMonths} חודשים × ₪${monthPrice} + ${weeksM} שבועות + ${daysM} ימים`;}
+  }
+  price=Math.min(price,Math.ceil(days/30)*monthPrice);
+  return{total:price,breakdown};
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard(){
+  const active=STATE.rentals.filter(r=>r.status==="active"&&canSeeBranch(r.branchId));
+  const total=STATE.rentals.filter(r=>canSeeBranch(r.branchId));
+  // stats
+  document.getElementById("dashStats").innerHTML=`
+    <div class="stat-card"><div class="stat-label">השכרות פעילות</div><div class="stat-val teal">${active.length}</div></div>
+    <div class="stat-card"><div class="stat-label">סה"כ לקוחות</div><div class="stat-val green">${STATE.clients.filter(c=>canSeeBranch(c.branchId)).length}</div></div>
+    <div class="stat-card"><div class="stat-label">ניידים בהשכרה</div><div class="stat-val yellow">${active.length}</div></div>
+    <div class="stat-card"><div class="stat-label">סניפים</div><div class="stat-val purple">${myBranches().length}</div></div>
+  `;
+  // active rentals
+  const el=document.getElementById("dashRentals");
+  if(!active.length){el.innerHTML='<div class="empty-state"><div class="icon">✅</div>אין השכרות פעילות</div>';return;}
+  el.innerHTML=active.slice(0,5).map(r=>{
+    const client=STATE.clients.find(c=>c.id===r.clientId);
+    const laptop=STATE.laptops.find(l=>l.id===r.laptopId);
+    const b=STATE.branches.find(b=>b.id===r.branchId);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>💻</span><span style="flex:1;font-weight:600">${client?.name||"לקוח"}</span>
+      <span style="color:var(--text2)">${laptop?.name||""}</span>
+      <span class="badge blue">${fmtDate(r.startDate)}</span>
+    </div>`;
+  }).join("");
+  // pending
+  const pendingEl=document.getElementById("dashPending");
+  const overdue=active.filter(r=>{
+    if(!r.endDate)return false;
+    return new Date(r.endDate)<new Date();
+  });
+  if(!overdue.length){pendingEl.innerHTML='<div class="empty-state"><div class="icon">✅</div>אין תשלומים דחופים</div>';return;}
+  pendingEl.innerHTML=overdue.map(r=>{
+    const client=STATE.clients.find(c=>c.id===r.clientId);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>⚠️</span><span style="flex:1;font-weight:600">${client?.name||"לקוח"}</span>
+      <span class="badge red">איחור החזרה</span>
+    </div>`;
+  }).join("");
+}
+
+// ============================================================
+// COMPUTER PAGE (existing system integration)
+// ============================================================
+function loadComputerPage(){
+  const el=document.getElementById("computerContent");
+  el.innerHTML=`
+    <div style="background:var(--surface2);border-radius:10px;padding:20px;text-align:center">
+      <div style="font-size:32px;margin-bottom:10px">🖥️</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">מערכת ניהול חדר מחשבים קיימת</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">המערכת הקיימת עם כל הפיצ'רים — מלאי, משימות, פניות, צ'אט ועדכונים</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div class="stat-card" style="min-width:150px"><div class="stat-label">עובדים פעילים</div><div class="stat-val teal" id="cmpWorkers">—</div></div>
+        <div class="stat-card" style="min-width:150px"><div class="stat-label">פניות פתוחות</div><div class="stat-val red" id="cmpTickets">—</div></div>
+        <div class="stat-card" style="min-width:150px"><div class="stat-label">משימות השבוע</div><div class="stat-val yellow" id="cmpTasks">—</div></div>
+      </div>
+      <div style="margin-top:16px">
+        <a href="index.html" target="_blank" class="btn-teal" style="text-decoration:none;display:inline-flex">🔗 פתח מערכת מחשבים בחלון חדש</a>
+      </div>
+    </div>
+  `;
+  // load stats from existing system
+  loadComputerStats();
+}
+
+async function loadComputerStats(){
+  try{
+    const workers=await getDocs(collection(db,"users"));
+    document.getElementById("cmpWorkers").textContent=workers.size;
+    const tickets=await getDocs(collection(db,"tickets"));
+    let open=0;tickets.forEach(d=>{if(d.data().status!=="done")open++;});
+    document.getElementById("cmpTickets").textContent=open;
+    const tasks=await getDocs(collection(db,"tasks"));
+    document.getElementById("cmpTasks").textContent=tasks.size;
+  }catch(e){}
+}
+
+// ============================================================
+// RENTALS PAGE
+// ============================================================
+function loadRentalsPage(){
+  document.getElementById("rentalsSubtitle").textContent=CU.role==="owner"?"כל הסניפים — "+STATE.rentals.filter(r=>r.status==="active").length+" פעילות":"השכרות "+myBranches()[0]?.name;
+  // Branch tabs
+  buildBranchTabs("rentalBranchTabs","rentalBranch",STATE.rentalBranch,b=>{STATE.rentalBranch=b;renderRentals();});
+  renderRentals();
+}
+
+function renderRentals(){
+  let rentals=STATE.rentals.filter(r=>canSeeBranch(r.branchId));
+  if(STATE.rentalBranch!=="all")rentals=rentals.filter(r=>r.branchId===STATE.rentalBranch);
+  if(STATE.rentalFilter==="active")rentals=rentals.filter(r=>r.status==="active");
+  if(STATE.rentalFilter==="returned")rentals=rentals.filter(r=>r.status==="returned");
+  // Stats
+  const active=rentals.filter(r=>r.status==="active");
+  document.getElementById("rentalStats").innerHTML=`
+    <div class="stat-card"><div class="stat-label">פעילות</div><div class="stat-val teal">${active.length}</div></div>
+    <div class="stat-card"><div class="stat-label">הוחזרו החודש</div><div class="stat-val green">${rentals.filter(r=>r.status==="returned").length}</div></div>
+    <div class="stat-card"><div class="stat-label">הכנסות (מוצג)</div><div class="stat-val yellow">${formatMoney(rentals.filter(r=>r.status==="returned").reduce((a,r)=>a+(r.actualPrice||r.calcPrice||0),0))}</div></div>
+  `;
+  const el=document.getElementById("rentalsList");
+  if(!rentals.length){el.innerHTML='<div class="empty-state"><div class="icon">💻</div>אין השכרות</div>';return;}
+  el.innerHTML=rentals.map(r=>{
+    const client=STATE.clients.find(c=>c.id===r.clientId);
+    const laptop=STATE.laptops.find(l=>l.id===r.laptopId);
+    const b=STATE.branches.find(b=>b.id===r.branchId);
+    const days=r.endDate?calcRentalDays(r.startDate,r.status==="returned"?r.returnDate:r.endDate):calcRentalDays(r.startDate,new Date().toISOString().split("T")[0]);
+    const isOverdue=r.status==="active"&&r.endDate&&new Date(r.endDate)<new Date();
+    return`<div class="rental-card">
+      <div class="rental-header">
+        <div class="rental-client">👤 ${client?.name||"לקוח לא ידוע"}</div>
+        <span class="badge ${r.status==="active"?(isOverdue?"red":"blue"):"green"}">${r.status==="active"?(isOverdue?"⚠️ איחור":"פעיל"):"הוחזר"}</span>
+        <span class="badge purple">${b?.name||""}</span>
+      </div>
+      <div class="rental-meta">
+        <span>💻 ${laptop?.name||"נייד"}</span>
+        <span>📅 ${fmtDate(r.startDate)}${r.endDate?" → "+fmtDate(r.endDate):""}</span>
+        <span>⏱️ ${days} ימים</span>
+        ${r.calcPrice?`<span style="font-weight:700;color:var(--teal)">💰 ${formatMoney(r.calcPrice)}</span>`:""}
+      </div>
+      ${r.notes?`<div style="font-size:12px;color:var(--text2);margin-top:5px">📝 ${r.notes}</div>`:""}
+      <div class="rental-footer">
+        <button class="btn-sm" onclick="openEditRental('${r.id}')">✏️ ערוך</button>
+        ${r.status==="active"?`<button class="btn-sm" onclick="returnRental('${r.id}')">✅ סמן כהוחזר</button>`:""}
+        <button class="btn-danger" onclick="deleteRental('${r.id}')">מחק</button>
+        ${r.notes?"":`<span style="flex:1"></span>`}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+window.filterRentals=function(f,btn){
+  STATE.rentalFilter=f;
+  document.querySelectorAll("#page-rentals .branch-tabs:last-of-type .branch-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderRentals();
+}
+
+window.openNewRental=function(){
+  document.getElementById("rentalEditId").value="";
+  document.getElementById("rentalModalTitle").textContent="💻 השכרה חדשה";
+  document.getElementById("rentalStart").value=new Date().toISOString().split("T")[0];
+  document.getElementById("rentalEnd").value="";
+  document.getElementById("rentalNotes").value="";
+  document.getElementById("rentalCustomPrice").value="";
+  document.getElementById("rentalCalcBox").style.display="none";
+  // Fill selects
+  const branches=myBranches();
+  document.getElementById("rentalBranch").innerHTML=branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join("");
+  const myClients=STATE.clients.filter(c=>canSeeBranch(c.branchId));
+  document.getElementById("rentalClient").innerHTML=myClients.map(c=>`<option value="${c.id}">${c.name} — ${c.phone||""}</option>`).join("");
+  const myLaptops=STATE.laptops.filter(l=>canSeeBranch(l.branchId)||CU.role==="owner");
+  document.getElementById("rentalLaptop").innerHTML=myLaptops.map(l=>`<option value="${l.id}" data-day="${l.dayPrice}" data-week="${l.weekPrice}" data-month="${l.monthPrice}">${l.name} (₪${l.dayPrice}/יום)</option>`).join("");
+  document.getElementById("rentalModal").classList.add("open");
+}
+
+window.openEditRental=function(id){
+  const r=STATE.rentals.find(r=>r.id===id);if(!r)return;
+  document.getElementById("rentalEditId").value=id;
+  document.getElementById("rentalModalTitle").textContent="✏️ עריכת השכרה";
+  const branches=myBranches();
+  document.getElementById("rentalBranch").innerHTML=branches.map(b=>`<option value="${b.id}" ${b.id===r.branchId?"selected":""}>${b.name}</option>`).join("");
+  const myClients=STATE.clients.filter(c=>canSeeBranch(c.branchId));
+  document.getElementById("rentalClient").innerHTML=myClients.map(c=>`<option value="${c.id}" ${c.id===r.clientId?"selected":""}>${c.name} — ${c.phone||""}</option>`).join("");
+  const myLaptops=STATE.laptops.filter(l=>canSeeBranch(l.branchId)||CU.role==="owner");
+  document.getElementById("rentalLaptop").innerHTML=myLaptops.map(l=>`<option value="${l.id}" ${l.id===r.laptopId?"selected":""} data-day="${l.dayPrice}" data-week="${l.weekPrice}" data-month="${l.monthPrice}">${l.name}</option>`).join("");
+  document.getElementById("rentalStart").value=r.startDate||"";
+  document.getElementById("rentalEnd").value=r.endDate||"";
+  document.getElementById("rentalNotes").value=r.notes||"";
+  document.getElementById("rentalCustomPrice").value=r.customDayPrice||"";
+  updateRentalCalc();
+  document.getElementById("rentalModal").classList.add("open");
+}
+
+window.updateRentalCalc=function(){
+  const start=document.getElementById("rentalStart").value;
+  const end=document.getElementById("rentalEnd").value;
+  if(!start||!end){document.getElementById("rentalCalcBox").style.display="none";return;}
+  const laptopSel=document.getElementById("rentalLaptop");
+  const opt=laptopSel.options[laptopSel.selectedIndex];
+  const custom=parseFloat(document.getElementById("rentalCustomPrice").value)||0;
+  const dayPrice=custom||parseFloat(opt?.dataset?.day)||0;
+  const weekPrice=parseFloat(opt?.dataset?.week)||dayPrice*6;
+  const monthPrice=parseFloat(opt?.dataset?.month)||dayPrice*25;
+  const days=calcRentalDays(start,end);
+  const{total,breakdown}=calcRentalPrice(days,dayPrice,weekPrice,monthPrice);
+  document.getElementById("rentalCalcBox").style.display="block";
+  document.getElementById("rentalCalcDetails").innerHTML=`
+    <div style="font-size:12px;color:var(--text2);margin-bottom:4px">${days} ימי חיוב (ללא שבת)</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">${breakdown}</div>
+    <div style="font-size:18px;font-weight:900;color:var(--teal)">סה"כ: ${formatMoney(total)}</div>
+  `;
+}
+
+window.saveRental=async function(){
+  const id=document.getElementById("rentalEditId").value;
+  const clientId=document.getElementById("rentalClient").value;
+  const laptopId=document.getElementById("rentalLaptop").value;
+  const branchId=document.getElementById("rentalBranch").value;
+  const startDate=document.getElementById("rentalStart").value;
+  const endDate=document.getElementById("rentalEnd").value;
+  const notes=document.getElementById("rentalNotes").value;
+  const customDayPrice=parseFloat(document.getElementById("rentalCustomPrice").value)||0;
+  if(!clientId||!laptopId||!startDate){showToast("נא למלא פרטים","error");return;}
+  const laptopSel=document.getElementById("rentalLaptop");
+  const opt=laptopSel.options[laptopSel.selectedIndex];
+  const dayPrice=customDayPrice||parseFloat(opt?.dataset?.day)||0;
+  const weekPrice=parseFloat(opt?.dataset?.week)||dayPrice*6;
+  const monthPrice=parseFloat(opt?.dataset?.month)||dayPrice*25;
+  const days=endDate?calcRentalDays(startDate,endDate):0;
+  const{total}=calcRentalPrice(days,dayPrice,weekPrice,monthPrice);
+  const data={clientId,laptopId,branchId,startDate,endDate,notes,customDayPrice,calcPrice:total,status:"active",ts:serverTimestamp(),by:CU.name};
+  if(id){await updateDoc(doc(db,"n_rentals",id),data);}
+  else{await addDoc(collection(db,"n_rentals"),data);}
+  await loadGlobalData();
+  renderRentals();
+  closeModal("rentalModal");
+  showToast("✅ נשמר!");
+}
+
+window.returnRental=async function(id){
+  await updateDoc(doc(db,"n_rentals",id),{status:"returned",returnDate:new Date().toISOString().split("T")[0]});
+  await loadGlobalData();renderRentals();loadDashboard();showToast("✅ הנייד הוחזר!");
+}
+
+window.deleteRental=async function(id){
+  if(!confirm("למחוק השכרה?"))return;
+  await deleteDoc(doc(db,"n_rentals",id));
+  await loadGlobalData();renderRentals();showToast("🗑️ נמחק");
+}
+
+// ============================================================
+// CLIENTS
+// ============================================================
+function loadClientsPage(){
+  buildBranchTabs("clientBranchTabs","clientBranch",STATE.clientBranch,b=>{STATE.clientBranch=b;renderClients();});
+  renderClients();
+}
+
+function renderClients(){
+  let clients=STATE.clients.filter(c=>canSeeBranch(c.branchId));
+  if(STATE.clientBranch!=="all")clients=clients.filter(c=>c.branchId===STATE.clientBranch);
+  const el=document.getElementById("clientsList");
+  if(!clients.length){el.innerHTML='<div class="empty-state"><div class="icon">👥</div>אין לקוחות עדיין<br><br><button class="btn-teal" onclick="openNewClient()">+ לקוח ראשון</button></div>';return;}
+  el.innerHTML=`<table class="data-table">
+    <thead><tr><th>שם</th><th>טלפון</th><th>ת"ז</th><th>כרטיס אשראי</th><th>סניף</th><th>פעולות</th></tr></thead>
+    <tbody>${clients.map(c=>{
+      const b=STATE.branches.find(b=>b.id===c.branchId);
+      const ccMasked=c.cc?("••••-••••-••••-"+c.cc.slice(-4)):"—";
+      return`<tr>
+        <td style="font-weight:600">${c.name}</td>
+        <td>${c.phone||"—"}</td>
+        <td>${c.idNum||"—"}</td>
+        <td style="font-family:monospace;letter-spacing:1px">${ccMasked}</td>
+        <td><span class="badge blue">${b?.name||"—"}</span></td>
+        <td>
+          <button class="btn-sm" onclick="openEditClient('${c.id}')">✏️</button>
+          <button class="btn-danger" onclick="deleteClient('${c.id}')">מחק</button>
+        </td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table>`;
+}
+
+window.openNewClient=function(){
+  document.getElementById("clientEditId").value="";
+  document.getElementById("clientModalTitle").textContent="👤 לקוח חדש";
+  ["clientName","clientPhone","clientAddress","clientCC","clientExp","clientCVV","clientID","clientNotes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("clientBranch").innerHTML=myBranches().map(b=>`<option value="${b.id}">${b.name}</option>`).join("");
+  document.getElementById("clientModal").classList.add("open");
+}
+
+window.openEditClient=function(id){
+  const c=STATE.clients.find(c=>c.id===id);if(!c)return;
+  document.getElementById("clientEditId").value=id;
+  document.getElementById("clientModalTitle").textContent="✏️ עריכת לקוח";
+  document.getElementById("clientName").value=c.name||"";
+  document.getElementById("clientPhone").value=c.phone||"";
+  document.getElementById("clientAddress").value=c.address||"";
+  document.getElementById("clientCC").value=c.cc||"";
+  document.getElementById("clientExp").value=c.exp||"";
+  document.getElementById("clientCVV").value=c.cvv||"";
+  document.getElementById("clientID").value=c.idNum||"";
+  document.getElementById("clientNotes").value=c.notes||"";
+  document.getElementById("clientBranch").innerHTML=myBranches().map(b=>`<option value="${b.id}" ${b.id===c.branchId?"selected":""}>${b.name}</option>`).join("");
+  document.getElementById("clientModal").classList.add("open");
+}
+
+window.saveClient=async function(){
+  const id=document.getElementById("clientEditId").value;
+  const name=document.getElementById("clientName").value.trim();
+  if(!name){showToast("נא להזין שם","error");return;}
+  const data={
+    name,phone:document.getElementById("clientPhone").value,
+    address:document.getElementById("clientAddress").value,
+    cc:document.getElementById("clientCC").value,
+    exp:document.getElementById("clientExp").value,
+    cvv:document.getElementById("clientCVV").value,
+    idNum:document.getElementById("clientID").value,
+    notes:document.getElementById("clientNotes").value,
+    branchId:document.getElementById("clientBranch").value,
+    ts:serverTimestamp()
+  };
+  if(id)await updateDoc(doc(db,"n_clients",id),data);
+  else await addDoc(collection(db,"n_clients"),data);
+  await loadGlobalData();renderClients();closeModal("clientModal");showToast("✅ נשמר!");
+}
+
+window.deleteClient=async function(id){
+  if(!confirm("למחוק לקוח?"))return;
+  await deleteDoc(doc(db,"n_clients",id));await loadGlobalData();renderClients();showToast("🗑️");
+}
+
+// ============================================================
+// ACCOUNTING
+// ============================================================
+function loadAccountingPage(){
+  buildBranchTabs("accBranchTabs","accBranch",STATE.accBranch,b=>{STATE.accBranch=b;loadAccounting();});
+  // Month selector
+  const sel=document.getElementById("accMonth");
+  const months=[];const now=new Date();
+  for(let i=0;i<18;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);}
+  sel.innerHTML=months.map(m=>`<option value="${m}" ${m===STATE.accMonth?"selected":""}>${m}</option>`).join("");
+  // Partners in payer selects
+  const partners=myBranches().map(b=>b.partner).filter(Boolean);
+  const people=["אני",...partners];
+  document.getElementById("incomeCollector").innerHTML=people.map(p=>`<option>${p}</option>`).join("");
+  document.getElementById("expensePayer").innerHTML=people.map(p=>`<option>${p}</option>`).join("");
+  loadAccounting();
+}
+
+async function loadAccounting(){
+  STATE.accMonth=document.getElementById("accMonth").value||STATE.accMonth;
+  const branchId=STATE.accBranch;
+  // load income
+  const iSnap=await getDocs(query(collection(db,"n_income"),where("branchId","==",branchId),where("month","==",STATE.accMonth)));
+  const incomes=iSnap.docs.map(d=>({...d.data(),id:d.id}));
+  // load expenses
+  const eSnap=await getDocs(query(collection(db,"n_expenses"),where("branchId","==",branchId),where("month","==",STATE.accMonth)));
+  const expenses=eSnap.docs.map(d=>({...d.data(),id:d.id}));
+  const totalI=incomes.reduce((a,i)=>a+(Number(i.amount)||0),0);
+  const totalE=expenses.reduce((a,e)=>a+(Number(e.amount)||0),0);
+  const profit=totalI-totalE;
+  document.getElementById("totalIncome").textContent=formatMoney(totalI);
+  document.getElementById("totalExpense").textContent=formatMoney(totalE);
+  document.getElementById("incomeList").innerHTML=incomes.length?incomes.map(i=>`<div class="acc-row">
+    <div class="acc-label">${i.desc||i.category}<br><span style="font-size:11px;color:var(--text2)">${i.category} · ${fmtDate(i.date)} · ${i.collector||""}</span></div>
+    <div class="acc-amount income">${formatMoney(i.amount)}</div>
+    <button class="btn-danger" onclick="deleteAcc('n_income','${i.id}')">✕</button>
+  </div>`).join(""):'<div class="empty-state" style="padding:16px"><div class="icon">📥</div>אין הכנסות</div>';
+  document.getElementById("expenseList").innerHTML=expenses.length?expenses.map(e=>`<div class="acc-row">
+    <div class="acc-label">${e.desc}<br><span style="font-size:11px;color:var(--text2)">${e.type==="fixed"?"קבועה":"משתנה"} · ${fmtDate(e.date)} · שילם: ${e.payer||""}</span></div>
+    <div class="acc-amount expense">${formatMoney(e.amount)}</div>
+    <button class="btn-danger" onclick="deleteAcc('n_expenses','${e.id}')">✕</button>
+  </div>`).join(""):'<div class="empty-state" style="padding:16px"><div class="icon">📤</div>אין הוצאות</div>';
+  // Profit summary
+  const branch=STATE.branches.find(b=>b.id===branchId);
+  const partnerPct=Number(branch?.partnerPct)||0;
+  const myPct=100-partnerPct;
+  const myProfit=profit*(myPct/100);
+  const partnerProfit=profit*(partnerPct/100);
+  document.getElementById("profitSummary").innerHTML=`
+    <div style="font-size:13px;font-weight:700;color:var(--teal-d);margin-bottom:8px">📊 סיכום חודש ${STATE.accMonth} — ${branch?.name||""}</div>
+    <div class="summary-row"><span>סה"כ הכנסות</span><span style="color:var(--green);font-weight:700">${formatMoney(totalI)}</span></div>
+    <div class="summary-row"><span>סה"כ הוצאות</span><span style="color:var(--danger);font-weight:700">${formatMoney(totalE)}</span></div>
+    <div class="summary-row total"><span>רווח נקי</span><span>${formatMoney(profit)}</span></div>
+    ${partnerPct>0?`
+    <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--teal)">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">חלוקת רווחים</div>
+      <div class="summary-row"><span>✅ חלקי (${myPct}%)</span><span style="color:var(--teal);font-weight:700">${formatMoney(myProfit)}</span></div>
+      <div class="summary-row"><span>👤 ${branch?.partner||"שותף"} (${partnerPct}%)</span><span style="color:var(--purple);font-weight:700">${formatMoney(partnerProfit)}</span></div>
+      ${partnerProfit>0?`<div style="margin-top:8px;padding:8px;background:rgba(142,68,173,0.08);border-radius:8px;font-size:12px;color:var(--purple);font-weight:700">💸 יש להעביר ל${branch?.partner||"שותף"}: ${formatMoney(partnerProfit)}</div>`:""}
+    </div>`:""}
+  `;
+}
+
+window.openAddIncome=function(){
+  document.getElementById("incomeDate").value=new Date().toISOString().split("T")[0];
+  document.getElementById("incomeAmount").value="";document.getElementById("incomeDesc").value="";
+  document.getElementById("incomeModal").classList.add("open");
+}
+window.openAddExpense=function(){
+  document.getElementById("expenseDate").value=new Date().toISOString().split("T")[0];
+  document.getElementById("expenseAmount").value="";document.getElementById("expenseDesc").value="";
+  document.getElementById("expenseModal").classList.add("open");
+}
+
+window.saveIncome=async function(){
+  const amount=parseFloat(document.getElementById("incomeAmount").value);if(!amount){showToast("נא סכום","error");return;}
+  await addDoc(collection(db,"n_income"),{
+    amount,desc:document.getElementById("incomeDesc").value,
+    category:document.getElementById("incomeCategory").value,
+    collector:document.getElementById("incomeCollector").value,
+    date:document.getElementById("incomeDate").value,
+    month:STATE.accMonth,branchId:STATE.accBranch,by:CU.name,ts:serverTimestamp()
+  });
+  closeModal("incomeModal");loadAccounting();showToast("✅ נשמר!");
+}
+
+window.saveExpense=async function(){
+  const amount=parseFloat(document.getElementById("expenseAmount").value);if(!amount){showToast("נא סכום","error");return;}
+  await addDoc(collection(db,"n_expenses"),{
+    amount,desc:document.getElementById("expenseDesc").value,
+    type:document.getElementById("expenseType").value,
+    payer:document.getElementById("expensePayer").value,
+    date:document.getElementById("expenseDate").value,
+    month:STATE.accMonth,branchId:STATE.accBranch,by:CU.name,ts:serverTimestamp()
+  });
+  closeModal("expenseModal");loadAccounting();showToast("✅ נשמר!");
+}
+
+window.deleteAcc=async function(col,id){
+  await deleteDoc(doc(db,col,id));loadAccounting();showToast("🗑️");
+}
+
+// ============================================================
+// DOCUMENTS
+// ============================================================
+async function loadDocsPage(){
+  const adminBar=document.getElementById("docsAdminBar");
+  adminBar.innerHTML=`<div style="font-size:14px;font-weight:700;flex:1">מסמכים להורדה</div>`;
+  if((CU.perms?.admin||CU.role==="owner"))adminBar.innerHTML+=`<button class="btn-teal" onclick="openAddDoc()">+ הוסף מסמך</button>`;
+  const snap=await getDocs(collection(db,"n_docs"));
+  const docs=snap.docs.map(d=>({...d.data(),id:d.id})).filter(d=>d.access==="all"||(CU.perms?.admin||CU.role==="owner"));
+  const categories=["הכל",...new Set(docs.map(d=>d.category))];
+  document.getElementById("docCategoryTabs").innerHTML=categories.map((c,i)=>`<button class="branch-tab ${i===0?"active":""}" onclick="filterDocs('${c}',this)">${c}</button>`).join("");
+  window._allDocs=docs;
+  renderDocs(docs);
+}
+
+window.filterDocs=function(cat,btn){
+  document.querySelectorAll("#docCategoryTabs .branch-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderDocs(cat==="הכל"?window._allDocs:(window._allDocs||[]).filter(d=>d.category===cat));
+}
+
+function renderDocs(docs){
+  const el=document.getElementById("docsList");
+  if(!docs.length){el.innerHTML='<div class="empty-state"><div class="icon">📁</div>אין מסמכים</div>';return;}
+  const icons={pdf:"📄",word:"📝",excel:"📊",other:"📎"};
+  el.innerHTML=docs.map(d=>`<div class="doc-item">
+    <div class="doc-icon">${icons[d.type]||"📄"}</div>
+    <div class="doc-info"><div class="doc-name">${d.name}</div><div class="doc-sub">${d.desc||""} · ${d.category}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      ${d.url?`<a href="${d.url}" target="_blank" class="btn-teal" style="text-decoration:none;font-size:12px;padding:6px 12px">⬇️ פתח</a>`:""}
+      ${(CU.perms?.admin||CU.role==="owner")?`<button class="btn-danger" onclick="deleteDoc('${d.id}')">מחק</button>`:""}
+    </div>
+  </div>`).join("");
+}
+
+window.openAddDoc=function(){
+  ["docName","docDesc","docUrl"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("docModal").classList.add("open");
+}
+window.saveDoc=async function(){
+  const name=document.getElementById("docName").value.trim();if(!name){showToast("נא שם","error");return;}
+  await addDoc(collection(db,"n_docs"),{
+    name,desc:document.getElementById("docDesc").value,
+    category:document.getElementById("docCategory").value,
+    type:document.getElementById("docType").value,
+    url:document.getElementById("docUrl").value,
+    access:document.getElementById("docAccess").value,
+    ts:serverTimestamp()
+  });
+  closeModal("docModal");loadDocsPage();showToast("✅ נוסף!");
+}
+window.deleteDoc=async function(id){
+  await deleteDoc(doc(db,"n_docs",id));loadDocsPage();showToast("🗑️");
+}
+
+// ============================================================
+// GUIDES
+// ============================================================
+async function loadGuidesPage(){
+  const adminBar=document.getElementById("guidesAdminBar");
+  adminBar.innerHTML=`<div style="font-size:14px;font-weight:700;flex:1">הדרכות וסרטונים</div>`;
+  if((CU.perms?.admin||CU.role==="owner"))adminBar.innerHTML+=`<button class="btn-teal" onclick="openAddGuide()">+ הוסף הדרכה</button>`;
+  const snap=await getDocs(collection(db,"n_guides"));
+  const guides=snap.docs.map(d=>({...d.data(),id:d.id}));
+  const categories=["הכל",...new Set(guides.map(d=>d.category))];
+  document.getElementById("guideCategoryTabs").innerHTML=categories.map((c,i)=>`<button class="branch-tab ${i===0?"active":""}" onclick="filterGuides('${c}',this)">${c}</button>`).join("");
+  window._allGuides=guides;
+  renderGuides(guides);
+}
+
+window.filterGuides=function(cat,btn){
+  document.querySelectorAll("#guideCategoryTabs .branch-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderGuides(cat==="הכל"?window._allGuides:(window._allGuides||[]).filter(g=>g.category===cat));
+}
+
+function renderGuides(guides){
+  const el=document.getElementById("guidesList");
+  if(!guides.length){el.innerHTML='<div class="empty-state"><div class="icon">📖</div>אין הדרכות</div>';return;}
+  el.innerHTML=guides.map(g=>`<div class="guide-item">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="guide-title">${g.name}</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge blue">${g.category}</span>
+        ${(CU.perms?.admin||CU.role==="owner")?`<button class="btn-danger" onclick="deleteGuide('${g.id}')">מחק</button>`:""}
+      </div>
+    </div>
+    ${g.text?`<div class="guide-text">${g.text}</div>`:""}
+    ${g.video?`<iframe class="video-embed" src="${g.video}" allowfullscreen></iframe>`:""}
+  </div>`).join("");
+}
+
+window.openAddGuide=function(){
+  ["guideName","guideText","guideVideo"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("guideModal").classList.add("open");
+}
+window.saveGuide=async function(){
+  const name=document.getElementById("guideName").value.trim();if(!name){showToast("נא כותרת","error");return;}
+  await addDoc(collection(db,"n_guides"),{
+    name,text:document.getElementById("guideText").value,
+    category:document.getElementById("guideCategory").value,
+    video:document.getElementById("guideVideo").value,
+    ts:serverTimestamp()
+  });
+  closeModal("guideModal");loadGuidesPage();showToast("✅ נוסף!");
+}
+window.deleteGuide=async function(id){
+  await deleteDoc(doc(db,"n_guides",id));loadGuidesPage();showToast("🗑️");
+}
+
+// ============================================================
+// ADMIN PAGE
+// ============================================================
+async function loadAdminPage(){
+  // Users
+  const uSnap=await getDocs(collection(db,"n_users"));
+  const users=uSnap.docs.map(d=>({...d.data(),id:d.id}));
+  document.getElementById("adminUsersList").innerHTML=users.map(u=>{
+    const b=STATE.branches.find(b=>b.id===u.branchId);
+    const roleLabel={owner:"👑 בעלים",partner:"🤝 שותף",employee:"👤 עובד"}[u.role]||u.role;
+    const perms=Object.entries(u.perms||{}).filter(([k,v])=>v).map(([k])=>k).join(", ");
+    return`<div class="acc-row">
+      <div class="ua">${(u.name||"מ")[0]}</div>
+      <div style="flex:1;margin-right:8px">
+        <div style="font-weight:600">${u.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${u.email} · ${roleLabel} · ${b?.name||"כל הסניפים"}</div>
+        <div style="font-size:11px;color:var(--teal)">${perms||"ללא הרשאות"}</div>
+      </div>
+      <button class="btn-sm" onclick="openEditUser('${u.id}')">✏️</button>
+      ${u.role!=="owner"?`<button class="btn-danger" onclick="deleteUser('${u.id}')">מחק</button>`:""}
+    </div>`;
+  }).join("");
+  // Laptops
+  document.getElementById("laptopsList").innerHTML=STATE.laptops.length?STATE.laptops.map(l=>{
+    const b=STATE.branches.find(b=>b.id===l.branchId);
+    return`<div class="laptop-item">
+      <div class="laptop-name">💻 ${l.name} <span style="color:var(--text3);font-weight:400;font-size:11px">${l.serial||""}</span></div>
+      <div class="laptop-price">₪${l.dayPrice}/יום · ₪${l.weekPrice}/שבוע · ₪${l.monthPrice}/חודש</div>
+      <span class="badge blue">${b?.name||"כל"}</span>
+      <button class="btn-sm" onclick="openEditLaptop('${l.id}')">✏️</button>
+      <button class="btn-danger" onclick="deleteLaptop('${l.id}')">מחק</button>
+    </div>`;
+  }).join(""):'<div class="empty-state" style="padding:12px"><div class="icon">💻</div>אין ניידים</div>';
+  // Branches
+  document.getElementById("branchesList").innerHTML=STATE.branches.length?STATE.branches.map(b=>`<div class="acc-row">
+    <div style="flex:1">
+      <div style="font-weight:600">🏢 ${b.name}</div>
+      <div style="font-size:11px;color:var(--text2)">${b.address||""} ${b.partner?`· שותף: ${b.partner} (${b.partnerPct}%)`:"· ללא שותף"}</div>
+    </div>
+    <button class="btn-sm" onclick="openEditBranch('${b.id}')">✏️</button>
+    <button class="btn-danger" onclick="deleteBranch('${b.id}')">מחק</button>
+  </div>`).join(""):'<div class="empty-state" style="padding:12px">אין סניפים</div>';
+}
+
+// USER ADMIN
+window.openAddUser=function(){
+  document.getElementById("userEditId").value="";
+  document.getElementById("userModalTitle").textContent="👤 משתמש חדש";
+  ["userName","userEmail","userPass"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("userRole").value="employee";
+  document.getElementById("userBranch").innerHTML=STATE.branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join("");
+  document.querySelectorAll("#userPermissions .perm-chip").forEach(c=>c.classList.remove("on"));
+  document.getElementById("userModal").classList.add("open");
+}
+window.openEditUser=async function(id){
+  const snap=await getDoc(doc(db,"n_users",id));if(!snap.exists())return;
+  const u=snap.data();
+  document.getElementById("userEditId").value=id;
+  document.getElementById("userModalTitle").textContent="✏️ עריכת משתמש";
+  document.getElementById("userName").value=u.name||"";
+  document.getElementById("userEmail").value=u.email||"";
+  document.getElementById("userPass").value="";
+  document.getElementById("userRole").value=u.role||"employee";
+  document.getElementById("userBranch").innerHTML=STATE.branches.map(b=>`<option value="${b.id}" ${b.id===u.branchId?"selected":""}>${b.name}</option>`).join("");
+  document.querySelectorAll("#userPermissions .perm-chip").forEach(c=>{
+    c.classList.toggle("on",(u.perms||{})[c.dataset.perm]);
+  });
+  document.getElementById("userModal").classList.add("open");
+}
+window.togglePerm=function(el){el.classList.toggle("on");}
+window.saveUser=async function(){
+  const id=document.getElementById("userEditId").value;
+  const name=document.getElementById("userName").value.trim();
+  const email=document.getElementById("userEmail").value.trim();
+  const pass=document.getElementById("userPass").value;
+  if(!name||!email){showToast("נא למלא שם ומייל","error");return;}
+  const perms={};
+  document.querySelectorAll("#userPermissions .perm-chip").forEach(c=>{perms[c.dataset.perm]=c.classList.contains("on");});
+  const data={name,email,role:document.getElementById("userRole").value,branchId:document.getElementById("userBranch").value,perms};
+  if(pass)data.pass=pass;
+  if(id)await updateDoc(doc(db,"n_users",id),data);
+  else{if(!pass){showToast("נא סיסמה","error");return;}await addDoc(collection(db,"n_users"),data);}
+  closeModal("userModal");loadAdminPage();showToast("✅ נשמר!");
+}
+window.deleteUser=async function(id){
+  if(!confirm("למחוק?"))return;
+  await deleteDoc(doc(db,"n_users",id));loadAdminPage();showToast("🗑️");
+}
+
+// LAPTOP ADMIN
+window.openAddLaptop=function(){
+  document.getElementById("laptopEditId").value="";
+  document.getElementById("laptopModalTitle").textContent="💻 נייד חדש";
+  ["laptopName","laptopDay","laptopWeek","laptopMonth","laptopSerial","laptopNotes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("laptopBranch").innerHTML=STATE.branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join("");
+  document.getElementById("laptopModal").classList.add("open");
+}
+window.openEditLaptop=function(id){
+  const l=STATE.laptops.find(l=>l.id===id);if(!l)return;
+  document.getElementById("laptopEditId").value=id;
+  document.getElementById("laptopModalTitle").textContent="✏️ עריכת נייד";
+  document.getElementById("laptopName").value=l.name||"";
+  document.getElementById("laptopDay").value=l.dayPrice||"";
+  document.getElementById("laptopWeek").value=l.weekPrice||"";
+  document.getElementById("laptopMonth").value=l.monthPrice||"";
+  document.getElementById("laptopSerial").value=l.serial||"";
+  document.getElementById("laptopNotes").value=l.notes||"";
+  document.getElementById("laptopBranch").innerHTML=STATE.branches.map(b=>`<option value="${b.id}" ${b.id===l.branchId?"selected":""}>${b.name}</option>`).join("");
+  document.getElementById("laptopModal").classList.add("open");
+}
+window.saveLaptop=async function(){
+  const id=document.getElementById("laptopEditId").value;
+  const name=document.getElementById("laptopName").value.trim();
+  if(!name){showToast("נא שם","error");return;}
+  const data={
+    name,dayPrice:parseFloat(document.getElementById("laptopDay").value)||0,
+    weekPrice:parseFloat(document.getElementById("laptopWeek").value)||0,
+    monthPrice:parseFloat(document.getElementById("laptopMonth").value)||0,
+    serial:document.getElementById("laptopSerial").value,
+    notes:document.getElementById("laptopNotes").value,
+    branchId:document.getElementById("laptopBranch").value
+  };
+  if(id)await updateDoc(doc(db,"n_laptops",id),data);
+  else await addDoc(collection(db,"n_laptops"),data);
+  await loadGlobalData();closeModal("laptopModal");loadAdminPage();showToast("✅ נשמר!");
+}
+window.deleteLaptop=async function(id){
+  if(!confirm("למחוק נייד?"))return;
+  await deleteDoc(doc(db,"n_laptops",id));await loadGlobalData();loadAdminPage();showToast("🗑️");
+}
+
+// BRANCH ADMIN
+window.openAddBranch=function(){
+  document.getElementById("branchEditId").value="";
+  document.getElementById("branchModalTitle").textContent="🏢 סניף חדש";
+  ["branchName","branchAddress","branchPartner","branchPartnerPct","branchNotes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("branchModal").classList.add("open");
+}
+window.openEditBranch=function(id){
+  const b=STATE.branches.find(b=>b.id===id);if(!b)return;
+  document.getElementById("branchEditId").value=id;
+  document.getElementById("branchModalTitle").textContent="✏️ עריכת סניף";
+  document.getElementById("branchName").value=b.name||"";
+  document.getElementById("branchAddress").value=b.address||"";
+  document.getElementById("branchPartner").value=b.partner||"";
+  document.getElementById("branchPartnerPct").value=b.partnerPct||"";
+  document.getElementById("branchNotes").value=b.notes||"";
+  document.getElementById("branchModal").classList.add("open");
+}
+window.saveBranch=async function(){
+  const id=document.getElementById("branchEditId").value;
+  const name=document.getElementById("branchName").value.trim();
+  if(!name){showToast("נא שם סניף","error");return;}
+  const data={
+    name,address:document.getElementById("branchAddress").value,
+    partner:document.getElementById("branchPartner").value,
+    partnerPct:parseFloat(document.getElementById("branchPartnerPct").value)||0,
+    notes:document.getElementById("branchNotes").value
+  };
+  if(id)await updateDoc(doc(db,"n_branches",id),data);
+  else await addDoc(collection(db,"n_branches"),data);
+  await loadGlobalData();closeModal("branchModal");loadAdminPage();showToast("✅ נשמר!");
+}
+window.deleteBranch=async function(id){
+  if(!confirm("למחוק סניף?"))return;
+  await deleteDoc(doc(db,"n_branches",id));await loadGlobalData();loadAdminPage();showToast("🗑️");
+}
+
+// ============================================================
+// BRANCH TABS HELPER
+// ============================================================
+function buildBranchTabs(containerId,stateKey,current,onSelect){
+  const el=document.getElementById(containerId);
+  const branches=myBranches();
+  const showAll=CU.role==="owner";
+  let html=showAll?`<button class="branch-tab ${current==="all"?"active":""}" onclick="__btab_cb('${stateKey}','all',this)">כל הסניפים</button>`:"";
+  html+=branches.map(b=>`<button class="branch-tab ${current===b.id?"active":""}" onclick="__btab_cb('${stateKey}','${b.id}',this)">${b.name}</button>`).join("");
+  el.innerHTML=html;
+  window.__btab_cb=function(sk,val,btn){
+    STATE[sk]=val;
+    el.querySelectorAll(".branch-tab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    onSelect(val);
+  };
+  if(!current&&branches.length)STATE[stateKey]=showAll?"all":branches[0].id;
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+window.closeModal=function(id){document.getElementById(id).classList.remove("open");}
+window.showToast=function(msg,type="ok"){const t=document.getElementById("toast");t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove("show"),2800);}
+
+initDB();
+</script>
+</body>
+</html>
