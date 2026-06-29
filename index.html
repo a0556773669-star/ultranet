@@ -626,7 +626,7 @@ async function loadInventory(){
     const iDoc=await getDoc(doc(db,"inventory",curBranch));
     const inv=iDoc.exists()?iDoc.data():{};
     const bv=vis[curBranch]||{};
-    const meta=inv["__meta__"]||{};
+    const meta=inv["zMeta"]||{};
     document.getElementById("invNote").textContent=meta.lastUpdate?"עודכן: "+meta.lastUpdate+" על ידי "+meta.by:"";
     const visible=products.filter(p=>bv[p]!==false);
     document.getElementById("invBody").innerHTML=visible.map(p=>{
@@ -670,7 +670,7 @@ window.saveInventory=async function(){
         allInv[b][p]={...allInv[b][p],qty:parseInt(i.value)||0};
       });
       for(const b of BKEYS){
-        allInv[b]["__meta__"]={lastUpdate:ts,by:CU.name};
+        allInv[b]["zMeta"]={lastUpdate:ts,by:CU.name};
         await setDoc(doc(db,"inventory",b),allInv[b]);
       }
       await logAction("inventory_update","עדכון מלאי כל הסניפים");
@@ -697,7 +697,7 @@ window.saveInventory=async function(){
       });
     }
 
-    inv["__meta__"]={lastUpdate:ts,by:CU.name};
+    inv["zMeta"]={lastUpdate:ts,by:CU.name};
     await setDoc(doc(db,"inventory",curBranch),inv);
     await logAction("inventory_update","עדכון מלאי "+BRANCHES[curBranch]);
     showToast("✅ מלאי עודכן בהצלחה!");
